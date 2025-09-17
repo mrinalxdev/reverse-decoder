@@ -91,6 +91,53 @@ class ReversibleSelfAttention(nn.Module):
 
         return x
 
+class ReversibleFeedForward(nn.Module):
+
+
+    "feed forward layer that maintains reversibility"
+
+    def __init__(self, d_model : int, d_ff : int, dropout : float = 0.1):
+        super().__init__()
+
+
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.linear1 = nn.Linear(d_model, d_ff)
+        self.linear2 = nn.Linear(d_ff, d_model)
+
+        self.dropout = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(d_model)
+
+
+        self.stored_states = {}
+
+
+    def forward(self, x : torch.Tensor, store_states : bool = True, step_id : str = None) -> torch.Tensor:
+        if store_states and step_id :
+            self.stored_states[step_id] = {
+                'input' : x.clone(),
+                'pre_nrom' : x.clone()
+            }
+
+
+        normed_x = self.layer_norm(x)
+
+
+        ff_output = self.linear2(self.dropout(F.relu(self.linear1(normed_x))))
+
+        if store_states and step_id:
+            self.stored_states[step_id]['ffn_output'] = ff_output.clone()
+
+
+
+        return x + ff_output
+
+
+    def reverse(self, y : torch.Tensor, step_id : str) -> torch.Tensor:
+        
+
+        if step_id not in self.stored_states:
+            raise ValueError(f"No stored state found for step_id : {step_id}")
 
 
 
