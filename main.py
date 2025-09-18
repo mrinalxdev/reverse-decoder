@@ -140,40 +140,24 @@ class ReversibleFeedForward(nn.Module):
             raise ValueError(f"No stored state found for step_id : {step_id}")
 
 
+        states = self.stored_states[step_id]
 
 
+        # reversing the residual connection
+
+        x = y - states['ffn_output']
+
+        del self.stored_states[step_id]
+
+        return x
 
 
+class ReversibleDecoderLayer(nn.Module):
+
+    # a single decoder layer
+
+    def __init__(self, d_model : int, n_heads : int, d_ff : int, dropout : float = 0.1):
+        super().__init__()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        self.self_attn = ReversibleSelfAttention(d_model, n_heads, dropout)
