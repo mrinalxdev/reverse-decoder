@@ -161,3 +161,28 @@ class ReversibleDecoderLayer(nn.Module):
 
 
         self.self_attn = ReversibleSelfAttention(d_model, n_heads, dropout)
+        self.feed_forward = ReversibleFeedForward(d_model, d_ff, dropout)
+
+
+    def forward(self, x : torch.Tensor, mask: Optional[torch.Tensor] = None, store_states : bool = True, step_id : str = None) -> torch.Tensor:
+        x = self.self_attn (x, mask, store_states, f"{step_id}_attn" if step_id else None)
+
+        x = self.feed_forward(x, store_states, f"{step_id}_ff" if step_id else None)
+
+        return x
+    
+
+    def reverse(self, y : torch.Tensor, step_id : str) -> torch.Tensor :
+
+        # reversing the layer computation
+
+        y = self.feed_forward(y, f"{step_id}_ff")
+
+        y = self.self_attn.reverse(y, f"{step_id}_attn")
+
+
+        return y
+    
+
+# class ReversibleDecoder(nn.Module): 
+
