@@ -6,6 +6,7 @@ import numpy as np
 from typing import Optional, Tuple
 
 class ReversibleSelfAttention(nn.Module):
+    """Self-attention layer that maintains reversibility by storing computation states"""
     
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
         super().__init__()
@@ -59,8 +60,7 @@ class ReversibleSelfAttention(nn.Module):
         
         
         output = self.w_o(attn_output)
-        
-        if store_states and step_
+        if store_states and step_id:
             self.stored_states[step_id].update({
                 'attn_weights': attn_weights.clone(),
                 'attn_output': attn_output.clone(),
